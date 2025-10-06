@@ -1,6 +1,5 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
-using static UnityEditor.PlayerSettings;
 
 /// <summary>
 /// The grapple gun the player uses to navigate.
@@ -13,10 +12,16 @@ public class GrappleGun : MonoBehaviour
     private bool _hooked = false;
 
     /// <summary>
+    /// Whether or not the grapple gun is hooked onto something.
+    /// </summary>
+    public bool Hooked { get => _hooked; }
+
+    /// <summary>
     /// The current 1D direction the player is reeling in.
     /// </summary>
     private float _reelDir = 0f;
 
+    [Header("Grapple Values")]
     /// <summary>
     /// The minimum distance the player can reel in towards the hook.
     /// </summary>
@@ -59,6 +64,7 @@ public class GrappleGun : MonoBehaviour
     [SerializeField]
     private float _hookForce = 4f;
 
+    [Header("Camera Values")]
     /// <summary>
     /// The camera to get the mouse position from.
     /// </summary>
@@ -66,10 +72,39 @@ public class GrappleGun : MonoBehaviour
     private Camera _camera;
 
     /// <summary>
+    /// The weight of the camera's zoom as it lerps.
+    /// </summary>
+    [SerializeField]
+    private float _camZoomWeight = 1f;
+
+    /// <summary>
+    /// The maximum amount of zoom that the camera to go out to.
+    /// </summary>
+    [SerializeField]
+    private float _camMaxZoom = 32f;
+
+    /// <summary>
+    /// The margin which determines how much farther out the camera will zoom from the hook's position.
+    /// </summary>
+    [SerializeField]
+    private float _camZoomMargin = 1.2f;
+
+    /// <summary>
+    /// The camera's initial zoom.
+    /// </summary>
+    private float _initCamZoom;
+
+    /// <summary>
+    /// The zoom to lerp the camera to.
+    /// </summary>
+    private float _targetCamZoom;
+
+    [Header("Bodies and Joints")]
+    /// <summary>
     /// The hook the grapple gun uses to grapple towards and away from.
     /// </summary>
     [SerializeField]
-    private Rigidbody2D _hook;
+    private GrappleHook _hook;
 
     /// <summary>
     /// The player's main body to move around.
@@ -92,13 +127,14 @@ public class GrappleGun : MonoBehaviour
     {
         // Get the line to use as the grapple's cable.
         _line = GetComponent<LineRenderer>();
+        _initCamZoom = _camera.orthographicSize;
+        _targetCamZoom = _initCamZoom;
 
         // Initialize and enable the player input, and then bind the needed input functions.
         plyrInput = new();
         plyrInput.Enable();
         plyrInput.Player.Grapple.performed += OnGrapple;
         plyrInput.Player.StopGrappling.performed += OnStopGrappling;
-
     }
 
     // Update is called once per frame
@@ -121,31 +157,65 @@ public class GrappleGun : MonoBehaviour
             else
                 _grappleJoint.connectedAnchor = _hook.transform.position;
 
-            // Get the reel input and update the reel direction.
-            float reelInput = plyrInput.Player.Reel.ReadValue<float>();
-            _reelDir = Mathf.Lerp(_reelDir, reelInput, _reelWeight * Time.deltaTime);
-
-            // Update the grapple's distance and make sure to clamp it accordingly.
-            _grappleJoint.distance -= _reelDir * _reelSpeed * Time.deltaTime;
-            _grappleJoint.distance = Mathf.Clamp(_grappleJoint.distance, _minDist, _maxDist);
-
-            // Get the swing input.
-            float swingInput = plyrInput.Player.Swing.ReadValue<float>();
-
-            // If the swing input is not zero, then perform the calculations and actions needed.
-            if (swingInput != 0f)
-            {
-                // Add a force perpendicular to that of the hook's direction for swinging.
-                Vector2 hookDir = Vector3.Normalize(_hook.transform.position - transform.position);
-                float swingAngle = Mathf.Atan2(hookDir.y, hookDir.x) - Mathf.PI / 2f;
-                Vector2 swingDir = new Vector3(Mathf.Cos(swingAngle), Mathf.Sin(swingAngle));
-                _player.AddForce(swingDir * swingInput * _swingForce * Time.deltaTime);
-            }
+            Reel();
+            Swing();
 
             // If the grapple joint ever breaks and is disabled, then release the gun.
             if (!_grappleJoint.enabled)
                 StopGrappling();
         }
+
+        float hookDist = 0f;
+
+        // If the hook is currently active, then zoom out the camera to see it.
+        if (_hook.Released)
+            hookDist = Vector2.Distance(transform.position, _hook.transform.position);
+
+        // Lerp the camera's zoom to the currently targeted zoom value.
+        _targetCamZoom = Mathf.Clamp(hookDist * _camZoomMargin, _initCamZoom, _camMaxZoom);
+        _camera.orthographicSize = Mathf.Lerp(_camera.orthographicSize, _targetCamZoom, _camZoomWeight * Time.deltaTime);
+    }
+
+    private void Reel()
+    {
+        // Get the reel input and update the reel direction.
+        float reelInput = plyrInput.Player.Reel.ReadValue<float>();
+        _reelDir = Mathf.Lerp(_reelDir, reelInput, _reelWeight * Time.deltaTime);
+
+        // Update the grapple's distance and make sure to clamp it accordingly.
+        _grappleJoint.distance -= _reelDir * _reelSpeed * Time.deltaTime;
+        _grappleJoint.distance = Mathf.Clamp(_grappleJoint.distance, _minDist, _maxDist);
+    }
+
+    private void Swing()
+    {
+        // Get the swing input.
+        float swingInput = plyrInput.Player.Swing.ReadValue<float>();
+
+        // If the swing input is not zero, then perform the calculations and actions needed.
+        if (swingInput != 0f)
+        {
+            // Add a force perpendicular to that of the hook's direction for swinging.
+            Vector2 hookDir = Vector3.Normalize(_hook.transform.position - transform.position);
+            float swingAngle = Mathf.Atan2(hookDir.y, hookDir.x) - Mathf.PI / 2f;
+            Vector2 swingDir = new Vector3(Mathf.Cos(swingAngle), Mathf.Sin(swingAngle));
+            _player.AddForce(swingDir * swingInput * _swingForce * Time.deltaTime);
+        }
+    }
+
+    private Vector3 GetMousePos()
+    {
+        Vector2 mouseScrPos = Mouse.current.position.ReadValue();
+
+        if (mouseScrPos.x > 0f && mouseScrPos.x < _camera.pixelWidth &&
+            mouseScrPos.y > 0f && mouseScrPos.y < _camera.pixelHeight)
+        {
+            Vector3 mousePos = _camera.ScreenPointToRay(Mouse.current.position.ReadValue()).origin;
+            mousePos.z = 0f;
+            return mousePos;
+        }
+        else
+            return transform.position;
     }
 
     /// <summary>
@@ -160,19 +230,14 @@ public class GrappleGun : MonoBehaviour
         /* Get the direction of the mouse. This will be the direction to shoot the hook in.
          * Mouse position calculation from Mahsa on https://stackoverflow.com/questions/66930040/how-to-find-the-mouses-position-using-the-new-input-system.
          */
-        Ray ray = _camera.ScreenPointToRay(Mouse.current.position.ReadValue());
-        Vector2 dir = Vector3.Normalize(ray.origin - transform.position);
+        Vector2 dir = Vector3.Normalize(GetMousePos() - transform.position);
 
         // Reset the hook to a state that it can be fired in.
         ResetHook();
         _line.enabled = true;
-        _hook.transform.position = transform.position;
-        _hook.gameObject.SetActive(true);
         
-        // Start simulating the hook, reset its velocity, and propel it.
-        _hook.simulated = true;
-        _hook.linearVelocity = Vector2.zero;
-        _hook.AddForce(dir * _hookForce);
+        // Shoot out the hook.
+        _hook.Shoot(transform.position, _player.linearVelocity, dir * _hookForce);
     }
 
     /// <summary>
@@ -191,10 +256,11 @@ public class GrappleGun : MonoBehaviour
     private void ResetHook()
     {
         _hooked = false;
+        _hook.Retract();
         _line.enabled = false;
         _grappleJoint.enabled = false;
-        _hook.transform.parent = null;
         _grappleJoint.connectedBody = null;
+        _targetCamZoom = _initCamZoom;
     }
 
     /// <summary>
@@ -203,8 +269,6 @@ public class GrappleGun : MonoBehaviour
     public void StopGrappling()
     {
         ResetHook();
-        _hook.gameObject.SetActive(false);
-        _hook.transform.parent = null;
         _grappleJoint.connectedBody = null;
     }
 
