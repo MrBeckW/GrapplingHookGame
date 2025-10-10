@@ -175,6 +175,76 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 892cdc41c47c77d43b50afa463af1512, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GrappleHook
+--- !u!1 &1025499045 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3438786412561212335, guid: d7794a499a7b26b409f15dfefb463139, type: 3}
+  m_PrefabInstance: {fileID: 3395868980888973053}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &1412669659
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2010105052056874215, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: player
+      value: 
+      objectReference: {fileID: 1025499045}
+    - target: {fileID: 2010105052056874215, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: grappleGun
+      value: 
+      objectReference: {fileID: 2564615476983912463}
+    - target: {fileID: 2229145631557033043, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 8.39953
+      objectReference: {fileID: 0}
+    - target: {fileID: 2229145631557033043, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 5.1686
+      objectReference: {fileID: 0}
+    - target: {fileID: 2229145631557033043, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2229145631557033043, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2229145631557033043, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2229145631557033043, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2229145631557033043, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2229145631557033043, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2229145631557033043, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2229145631557033043, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7420125209259083448, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
+      propertyPath: m_Name
+      value: PlayerSpawner
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 022352e0b004c564aad171abf1c7d441, type: 3}
 --- !u!1 &2137662703
 GameObject:
   m_ObjectHideFlags: 0
@@ -1268,3 +1338,4 @@ SceneRoots:
   - {fileID: 5973953599417196978}
   - {fileID: 3395868980888973053}
   - {fileID: 38995973}
+  - {fileID: 1412669659}
